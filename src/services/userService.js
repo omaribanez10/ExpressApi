@@ -1,14 +1,15 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 // userService.js
-const getUserByUsernameAndPassword = async (connection, username, password) => {
-    const [user] = await connection.query('SELECT * FROM users WHERE username = ? AND password = ? LIMIT 1', [username, password]);
+const getUserByUsernameAndPassword = async (connection, username) => {
+    const [user] = await connection.query('SELECT * FROM users WHERE username = ? LIMIT 1', [username]);
     if (user?.id) {
         const insertedUserId = Number(user.id);
         return {
             id: insertedUserId,
             name: user.name,
-            username: user.username
+            username: user.username,
+            password: user.password
         };
     } else {
         return null;

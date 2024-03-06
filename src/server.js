@@ -4,19 +4,13 @@ const bodyParser = require('body-parser');
 const config = require('./config');
 const authMiddleware = require('./middlewares/authMiddleware');
 const authRoutes = require('./routes/auth');
-const othersRoutes = require('./routes/others');
+const apiRoutes = require('./routes/api');
 const app = express();
 
 app.use(express.json());
-
-// Rutas públicas (sin autenticación)
 app.use('/auth', authRoutes);
-
-// Middleware de autenticación JWT
 app.use(authMiddleware);
-
-// Rutas protegidas (requieren autenticación)
-app.use('/api', othersRoutes);
+app.use('/api', apiRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

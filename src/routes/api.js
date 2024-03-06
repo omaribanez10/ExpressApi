@@ -14,7 +14,8 @@ router.get('/cards', async (req, res) => {
         res.json(cards);
     } catch (error) {
         // Manejo de errores...
-        throw error;
+        console.error('Error al obtener las cartas:', error);
+        res.status(500).json({ error: 'Error interno del servidor al obtener las cartas.' });
     } finally {
         if (connection) connection.release(); // Libera la conexión al pool
     }
@@ -41,7 +42,7 @@ router.post('/rating_cards', async (req, res) => {
         connection = await pool.getConnection();
         const oldRatingCard = await ratingCardService.getRatingCardByUser(connection, user_id, card_id);
         if (oldRatingCard?.id) {
-            return res.status(409).send("Ya se ha calificado esta carta");
+            return res.status(400).send({msg: "Ya se ha calificado esta carta"});
         }
         const ratingCard = await ratingCardService.createRating(connection, user_id, card_id, rating);
         res.json({
@@ -49,8 +50,8 @@ router.post('/rating_cards', async (req, res) => {
         });
 
     } catch (error) {
-        // Manejo de errores...
-        throw error;
+        console.error('Error al calificar las cartas:', error);
+        res.status(500).json({ error: 'Error interno del servidor al registrar las cartas.' });
     } finally {
         if (connection) connection.release(); // Libera la conexión al pool
     }
@@ -62,12 +63,11 @@ router.get('/rating_cards_user', async (req, res) => {
         const user_id = await userService.getUserToken(req.headers.authorization);
         connection = await pool.getConnection();
         const ratingCards = await ratingCardService.getRatingCardsByUser(connection, user_id);
-        console.log("rating cards ", ratingCards);
         res.json(ratingCards);
 
     } catch (error) {
-        // Manejo de errores...
-        throw error;
+        console.error('Error al obtener las cartas calificadas por usted:', error);
+        res.status(500).json({ error: 'Error interno del servidor al obtener las cartas calificadas por usted.' });
     } finally {
         if (connection) connection.release(); // Libera la conexión al pool
     }
