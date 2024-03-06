@@ -3,6 +3,7 @@ const express = require('express');
 const pool = require('../db');
 const cardService = require('../services/cardService');
 const ratingCardService = require('../services/ratingCardService');
+const userService = require('../services/userService');
 const router = express.Router();
 
 router.get('/cards', async (req, res) => {
@@ -22,12 +23,12 @@ router.get('/cards', async (req, res) => {
 router.post('/rating_cards', async (req, res) => {
     let connection;
     try {
+        const user_id = await userService.getUserToken(req.headers.authorization);
         const {
-            user_id,
             card_id,
             rating
         } = req.body;
-        const requiredFields = ['user_id', 'card_id', 'rating'];
+        const requiredFields = ['card_id', 'rating'];
         // Verifica que todos los campos requeridos estén presentes
         const missingFields = requiredFields.filter(field => !req.body[field]);
         if (missingFields.length > 0) {
@@ -46,6 +47,23 @@ router.post('/rating_cards', async (req, res) => {
         res.json({
             id: ratingCard
         });
+
+    } catch (error) {
+        // Manejo de errores...
+        throw error;
+    } finally {
+        if (connection) connection.release(); // Libera la conexión al pool
+    }
+});
+
+router.get('/rating_cards_user', async (req, res) => {
+    let connection;
+    try {
+        const user_id = await userService.getUserToken(req.headers.authorization);
+        connection = await pool.getConnection();
+        const ratingCards = await ratingCardService.getRatingCardsByUser(connection, user_id);
+        console.log("rating cards ", ratingCards);
+        res.json(ratingCards);
 
     } catch (error) {
         // Manejo de errores...

@@ -17,7 +17,7 @@ router.post('/login', async (req, res) => {
         connection = await pool.getConnection();
         const user = await userService.getUserByUsernameAndPassword(connection, username, password);
         if (user?.id) {
-            const token = jwt.sign({username}, config.jwtSecret, { expiresIn: '1h' });
+            const token = jwt.sign({ username: username, id: user.id }, config.jwtSecret, { expiresIn: '1h' });
             res.json({ token });
         } else {
             res.status(401).json({ error: 'Credenciales incorrectas' });
@@ -54,6 +54,10 @@ router.post('/register', async (req, res) => {
             res.status(401).json({ error: 'Ha ocurrido un error al generar el token.' });
         }
     } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            // Manejar el caso de duplicación de entrada (usuario ya existe)
+            return res.status(409).json({ error: 'Nombre de usuario duplicado. Elija otro nombre de usuario.' });
+        }
         // Manejo de errores...
         throw error;
     } finally {

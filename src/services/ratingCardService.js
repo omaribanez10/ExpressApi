@@ -22,7 +22,21 @@ const getRatingCardByUser = async(connection, user_id, card_id) => {
     }
 }
 
+const getRatingCardsByUser = async(connection, user_id) => {
+    const ratingCards = await connection.query('SELECT * FROM rating_cards WHERE user_id = ?  ORDER BY date DESC',[user_id]);
+    // Convert BigInt id values to integers
+    const formattedCards = ratingCards.map(card => ({
+        id: Number(card.id),
+        user_id: Number(card.user_id),
+        card_id: Number(card.card_id),
+        rating:card.rating,
+        date:card.date
+    }));
+    return formattedCards;
+}
+
 module.exports = {
     createRating,
-    getRatingCardByUser
+    getRatingCardByUser,
+    getRatingCardsByUser
 };
