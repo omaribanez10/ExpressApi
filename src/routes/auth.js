@@ -14,15 +14,9 @@ router.post('/login', async (req, res) => {
         if (!username || !password) {
             return res.status(422).json({ error: 'Se requieren los campos nombre usuario y contraseña.' });
         }
-        //connection = await pool.getConnection();
-        //const user = await userService.getUserByUsernameAndPassword(connection, username, password);
-        /*const user = {
-            id: 123,
-            username: username,
-            password: password,
-            length:1
-        };*/
-        if (user.length === 1) {
+        connection = await pool.getConnection();
+        const user = await userService.getUserByUsernameAndPassword(connection, username, password);
+        if (user?.id) {
             const token = jwt.sign({username}, config.jwtSecret, { expiresIn: '1h' });
             res.json({ token });
         } else {
@@ -32,16 +26,16 @@ router.post('/login', async (req, res) => {
         // Manejo de errores...
         throw error;
     } finally {
-        //if (connection) connection.release(); // Libera la conexión al pool
+        if (connection) connection.release(); // Libera la conexión al pool
     }
 });
 
 router.post('/register', async (req, res) => {
 
-    //let connection;
+    let connection;
     try {
-        const { fullname, email, gender, username, password } = req.body;
-        const requiredFields = ['fullname', 'email', 'gender', 'username', 'password'];
+        const { fullname, username, password } = req.body;
+        const requiredFields = ['fullname', 'username', 'password'];
         // Verifica que todos los campos requeridos estén presentes
         const missingFields = requiredFields.filter(field => !req.body[field]);
         if (missingFields.length > 0) {
@@ -49,17 +43,9 @@ router.post('/register', async (req, res) => {
             return res.status(422).json({ error: errorMessage });
         }
 
-        const user = {
-            id: 1234,
-            name: fullname,
-            email: email,
-            gender:gender,
-            username: username,
-            password: password,
-            length:1
-        };
-        //connection = await pool.getConnection();
-        if (user.length === 1) {
+        connection = await pool.getConnection();
+        const user =  await userService.createUser(connection, fullname, username, password);
+        if (user?.id) {
             //const token = jwt.sign({ username }, config.jwtSecret, { expiresIn: '1h' });
             const token = jwt.sign({ username: user.username, id: user.id }, config.jwtSecret, { expiresIn: '1h' });
 
@@ -71,7 +57,7 @@ router.post('/register', async (req, res) => {
         // Manejo de errores...
         throw error;
     } finally {
-        //if (connection) connection.release(); // Libera la conexión al pool
+        if (connection) connection.release(); // Libera la conexión al pool
     }
 });
 

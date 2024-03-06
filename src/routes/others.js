@@ -1,9 +1,59 @@
 // src/routes/others.js
 const express = require('express');
+const pool = require('../db');
+const cardService = require('../services/cardService');
+const ratingCardService = require('../services/ratingCardService');
 const router = express.Router();
 
-router.get('/cards', (req, res) => {
-    res.json({ mensaje: 'Tarjetas recargables' });
+router.get('/cards', async (req, res) => {
+    let connection;
+    try {
+        connection = await pool.getConnection();
+        const cards = await cardService.getAllCards(connection);
+        res.json(cards);
+    } catch (error) {
+        // Manejo de errores...
+        throw error;
+    } finally {
+        if (connection) connection.release(); // Libera la conexión al pool
+    }
 });
+
+router.post('/rating_cards', async (req, res) => {
+    let connection;
+    try {
+        const {
+            user_id,
+            card_id,
+            rating
+        } = req.body;
+        const requiredFields = ['user_id', 'card_id', 'rating'];
+        // Verifica que todos los campos requeridos estén presentes
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+        if (missingFields.length > 0) {
+            const errorMessage = `Se requieren los siguientes campos: ${missingFields.join(', ')}.`;
+            return res.status(422).json({
+                error: errorMessage
+            });
+        }
+
+        connection = await pool.getConnection();
+        const oldRatingCard = await ratingCardService.getRatingCardByUser(connection, user_id, card_id);
+        if (oldRatingCard?.id) {
+            return res.status(409).send("Ya se ha calificado esta carta");
+        }
+        const ratingCard = await ratingCardService.createRating(connection, user_id, card_id, rating);
+        res.json({
+            id: ratingCard
+        });
+
+    } catch (error) {
+        // Manejo de errores...
+        throw error;
+    } finally {
+        if (connection) connection.release(); // Libera la conexión al pool
+    }
+});
+
 
 module.exports = router;
