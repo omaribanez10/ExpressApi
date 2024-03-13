@@ -55,7 +55,6 @@ router.post('/register', async (req, res) => {
         if (user?.id) {
             //const token = jwt.sign({ username }, config.jwtSecret, { expiresIn: '1h' });
             const token = jwt.sign({ username: user.username, id: user.id }, config.jwtSecret, { expiresIn: '1h' });
-
             res.json({ token });
         } else {
             res.status(401).json({ error: 'Ha ocurrido un error al generar el token.' });

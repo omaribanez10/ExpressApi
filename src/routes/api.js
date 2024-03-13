@@ -42,7 +42,7 @@ router.post('/rating_cards', async (req, res) => {
         connection = await pool.getConnection();
         const oldRatingCard = await ratingCardService.getRatingCardByUser(connection, user_id, card_id);
         if (oldRatingCard?.id) {
-            return res.status(400).send({msg: "Ya se ha calificado esta carta"});
+            return res.status(400).json({error: "Ya se ha calificado esta carta"});
         }
         const ratingCard = await ratingCardService.createRating(connection, user_id, card_id, rating);
         res.json({
